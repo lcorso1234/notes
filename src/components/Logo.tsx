@@ -9,30 +9,27 @@ interface LogoProps {
   showText?: boolean;
 }
 
-export function Logo({ size = 36, className = '', showText = false }: LogoProps) {
+export function Logo({ size = 42, className = '', showText = false }: LogoProps) {
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
       <div 
-        className="relative overflow-hidden rounded-xl shadow-sm border border-blue-100 flex items-center justify-center bg-white shrink-0"
+        className="relative overflow-hidden flex items-center justify-center shrink-0"
         style={{ width: size, height: size }}
       >
         <Image
           src="/logo.png"
-          alt="Practitioner Sanctuary"
+          alt="Tamillow Therapy"
           width={size}
           height={size}
-          className="object-contain p-0.5"
+          className="object-contain"
           priority
         />
       </div>
       {showText && (
-        <div>
-          <h1 className="text-sm font-semibold tracking-tight text-blue-950 font-serif leading-none">
-            Sovereign Mind
-          </h1>
-          <p className="text-[10px] text-amber-600 font-medium tracking-wide mt-0.5">
-            Practitioner Sanctuary
-          </p>
+        <div className="hidden sm:block leading-tight">
+          <div className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
+            Practitioner Vault
+          </div>
         </div>
       )}
     </div>

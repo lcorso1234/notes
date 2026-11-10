@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Trash2, Clock, CheckCircle2, ArrowLeft, Copy, Check, Printer } from 'lucide-react';
 import { VaultItem } from '@/types';
 
 interface CleanNoteEditorProps {

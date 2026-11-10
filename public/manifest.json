@@ -1,0 +1,16 @@
+{
+  "name": "Tamillow Therapy - Practitioner Vault",
+  "short_name": "Tamillow Therapy",
+  "description": "Confidential, zero-knowledge encrypted notes, reflections, and passwords sanctuary.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#286FA8",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "168x162",
+      "type": "image/png"
+    }
+  ]
+}

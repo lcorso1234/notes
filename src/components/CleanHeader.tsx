@@ -53,7 +53,7 @@ export function CleanHeader({
           </button>
         )}
 
-        <Logo size={36} showText={true} />
+        <Logo size={42} showText={true} />
       </div>
 
       {/* Center: Google Search Bar Style */}

@@ -98,12 +98,12 @@ export function LockScreen({ isInitialized, onUnlocked, onVaultImported }: LockS
         
         {/* Header Icon & Brand with Logo */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center p-2 rounded-2xl bg-blue-50/80 border border-blue-100 shadow-inner">
-            <Logo size={64} />
+          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white shadow-sm border border-slate-100">
+            <Logo size={74} />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-serif font-bold text-blue-950 tracking-wide">
-              {isInitialized ? 'Practitioner Sanctuary' : 'Create Your Sovereign Vault'}
+              {isInitialized ? 'Tamillow Therapy Sanctuary' : 'Welcome to Tamillow Therapy'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-1">
               {isInitialized
