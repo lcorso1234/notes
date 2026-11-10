@@ -126,3 +126,4 @@ export function PromptsModal({ isOpen, onClose, onSelectPrompt }: PromptsModalPr
     </div>
   );
 }
+

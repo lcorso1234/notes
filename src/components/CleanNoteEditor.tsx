@@ -18,6 +18,7 @@ export function CleanNoteEditor({
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [savedStatus, setSavedStatus] = useState(false);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Sync state if selected note changes
   useEffect(() => {
@@ -98,12 +99,19 @@ export function CleanNoteEditor({
             type="text"
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                textareaRef.current?.focus();
+              }
+            }}
             placeholder="Note Title..."
             className="w-full text-3xl sm:text-4xl font-serif font-bold text-stone-900 placeholder:text-stone-300 focus:outline-none border-b border-stone-100 pb-4 mb-6 transition-all"
           />
 
           {/* Note Content Blank Writing Canvas */}
           <textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => handleContentChange(e.target.value)}
             placeholder="Start writing here... Your thoughts, reflections, client breakthroughs, or memory..."
@@ -116,3 +124,4 @@ export function CleanNoteEditor({
     </div>
   );
 }
+

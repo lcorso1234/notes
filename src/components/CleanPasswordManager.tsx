@@ -222,6 +222,28 @@ export function CleanPasswordManager({
                 </button>
               </div>
             </div>
+            {password && (
+              <div className="flex items-center gap-2 pt-1">
+                <div className="flex-1 h-1 bg-stone-200 rounded-full overflow-hidden flex">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      password.length >= 16 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+                        ? 'w-full bg-emerald-500'
+                        : password.length >= 10
+                        ? 'w-2/3 bg-amber-500'
+                        : 'w-1/3 bg-rose-500'
+                    }`}
+                  />
+                </div>
+                <span className="text-[10px] font-medium text-stone-400">
+                  {password.length >= 16 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+                    ? 'Strong password'
+                    : password.length >= 10
+                    ? 'Moderate password'
+                    : 'Weak password'}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Website / Login URL */}
@@ -269,3 +291,4 @@ export function CleanPasswordManager({
     </div>
   );
 }
+
