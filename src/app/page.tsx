@@ -26,6 +26,9 @@ export default function CleanPractitionerApp() {
   const [activeTab, setActiveTab] = useState<'notes' | 'passwords'>('notes');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Mobile responsiveness state: 'list' (sidebar) or 'editor' (main canvas)
+  const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
+
   const [settings, setSettings] = useState<VaultSettings>(getStoredSettings());
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
@@ -42,6 +45,7 @@ export default function CleanPractitionerApp() {
     setIsUnlocked(false);
     setMasterPassphrase('');
     setSelectedItemId(null);
+    setMobileView('list');
   }, []);
 
   // Inactivity Auto-Lock
@@ -73,7 +77,6 @@ export default function CleanPractitionerApp() {
     setIsUnlocked(true);
     setIsInitialized(true);
 
-    // Default select first note
     const firstNote = loadedItems.find((it) => it.type !== 'password' && it.pillar !== 'credentials');
     if (firstNote) {
       setSelectedItemId(firstNote.id);
@@ -81,6 +84,8 @@ export default function CleanPractitionerApp() {
     } else if (loadedItems.length > 0) {
       setSelectedItemId(loadedItems[0].id);
     }
+    // On desktop start with editor open, on mobile start with list
+    setMobileView('list');
   };
 
   // Encrypt and persist changes
@@ -114,6 +119,7 @@ export default function CleanPractitionerApp() {
     setItems(nextItems);
     setSelectedItemId(newNote.id);
     setActiveTab('notes');
+    setMobileView('editor');
     persistItems(nextItems);
   };
 
@@ -141,6 +147,7 @@ export default function CleanPractitionerApp() {
     setItems(nextItems);
     setSelectedItemId(newPasswordItem.id);
     setActiveTab('passwords');
+    setMobileView('editor');
     persistItems(nextItems);
   };
 
@@ -160,6 +167,9 @@ export default function CleanPractitionerApp() {
         activeTab === 'notes' ? it.type !== 'password' : it.type === 'password'
       );
       setSelectedItemId(remainingInTab.length > 0 ? remainingInTab[0].id : null);
+      if (remainingInTab.length === 0) {
+        setMobileView('list');
+      }
     }
     persistItems(nextItems);
   };
@@ -175,6 +185,12 @@ export default function CleanPractitionerApp() {
     setSelectedItemId(candidate ? candidate.id : null);
   };
 
+  // Select item handler (handles mobile view transition)
+  const handleSelectItem = (id: string) => {
+    setSelectedItemId(id);
+    setMobileView('editor');
+  };
+
   // Active item
   const currentItem = useMemo(() => {
     return items.find((it) => it.id === selectedItemId) || null;
@@ -182,7 +198,7 @@ export default function CleanPractitionerApp() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-stone-950 flex items-center justify-center text-stone-400 font-serif text-sm">
+      <div className="min-h-screen bg-white flex items-center justify-center text-slate-500 font-serif text-sm">
         Preparing Practitioner Sanctuary...
       </div>
     );
@@ -203,88 +219,104 @@ export default function CleanPractitionerApp() {
   }
 
   return (
-    <div className="min-h-screen h-screen flex flex-col bg-stone-950 overflow-hidden font-sans">
-      {/* 1. Top Header */}
+    <div className="min-h-screen h-screen flex flex-col bg-slate-50 overflow-hidden font-sans">
+      {/* 1. Top Header with Google Search Bar Style */}
       <CleanHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onLockVault={handleLockVault}
         onOpenSettings={() => setSettingsModalOpen(true)}
+        onToggleMobileSidebar={() => setMobileView(mobileView === 'list' ? 'editor' : 'list')}
+        isMobileListOpen={mobileView === 'list'}
       />
 
-      {/* Main 2-Panel Workspace: Sidebar + White Blank Space / Password Manager */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* 2 & 3. Sidebar with Toggle & Note Titles */}
-        <CleanSidebar
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          items={items}
-          selectedItemId={selectedItemId}
-          onSelectItem={setSelectedItemId}
-          onNewNote={handleNewNote}
-          onNewPassword={handleNewPassword}
-          onDeleteItem={handleDeleteItem}
-          onLockVault={handleLockVault}
-          onExportBackup={() => setSettingsModalOpen(true)}
-          searchQuery={searchQuery}
-        />
+      {/* Main Responsive Workspace: Sidebar + White Blank Space / Password Manager */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* 2 & 3. Sidebar (visible on desktop, or on mobile when mobileView === 'list') */}
+        <div
+          className={`h-full ${
+            mobileView === 'list' ? 'flex w-full md:w-80' : 'hidden md:flex md:w-80'
+          }`}
+        >
+          <CleanSidebar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            items={items}
+            selectedItemId={selectedItemId}
+            onSelectItem={handleSelectItem}
+            onNewNote={handleNewNote}
+            onNewPassword={handleNewPassword}
+            onDeleteItem={handleDeleteItem}
+            onLockVault={handleLockVault}
+            onExportBackup={() => setSettingsModalOpen(true)}
+            searchQuery={searchQuery}
+          />
+        </div>
 
-        {/* 4. White Blank Space to write in OR Password Section */}
-        {activeTab === 'notes' ? (
-          currentItem ? (
-            <CleanNoteEditor
-              key={currentItem.id}
-              note={currentItem}
-              onUpdateNote={handleUpdateItem}
-              onDeleteNote={handleDeleteItem}
-            />
-          ) : (
-            <div className="flex-1 bg-stone-100 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-stone-400 mb-4 text-2xl font-serif">
-                ✎
+        {/* 4. White Blank Space To Write In OR Password Section (visible on desktop, or mobile when mobileView === 'editor') */}
+        <div
+          className={`flex-1 h-full overflow-hidden ${
+            mobileView === 'editor' ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'
+          }`}
+        >
+          {activeTab === 'notes' ? (
+            currentItem ? (
+              <CleanNoteEditor
+                key={currentItem.id}
+                note={currentItem}
+                onUpdateNote={handleUpdateItem}
+                onDeleteNote={handleDeleteItem}
+                onBack={() => setMobileView('list')}
+              />
+            ) : (
+              <div className="flex-1 bg-slate-100/60 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-amber-500 mb-4 text-2xl font-serif">
+                  ✎
+                </div>
+                <h2 className="text-xl font-serif font-bold text-slate-900">
+                  A Clean White Canvas
+                </h2>
+                <p className="text-sm text-slate-500 max-w-sm mt-1 leading-relaxed">
+                  Click below to begin writing. All reflections and memory are encrypted locally on this device.
+                </p>
+                <button
+                  onClick={handleNewNote}
+                  className="mt-5 py-2.5 px-5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-full text-xs shadow-md transition-all active:scale-95"
+                >
+                  + Create New Note
+                </button>
               </div>
-              <h2 className="text-xl font-serif font-semibold text-stone-800">
-                A Clean Blank Canvas
-              </h2>
-              <p className="text-sm text-stone-500 max-w-sm mt-1">
-                Click below to start a new note. All thoughts, memory, and reflections are securely encrypted.
-              </p>
-              <button
-                onClick={handleNewNote}
-                className="mt-5 py-2.5 px-5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-xl text-xs shadow-md transition-all"
-              >
-                + Create New Note
-              </button>
-            </div>
-          )
-        ) : (
-          currentItem ? (
-            <CleanPasswordManager
-              key={currentItem.id}
-              item={currentItem}
-              onUpdateItem={handleUpdateItem}
-              onDeleteItem={handleDeleteItem}
-            />
+            )
           ) : (
-            <div className="flex-1 bg-stone-100 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-rose-400 mb-4 text-2xl">
-                🔑
+            currentItem ? (
+              <CleanPasswordManager
+                key={currentItem.id}
+                item={currentItem}
+                onUpdateItem={handleUpdateItem}
+                onDeleteItem={handleDeleteItem}
+                onBack={() => setMobileView('list')}
+              />
+            ) : (
+              <div className="flex-1 bg-slate-100/60 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-blue-600 mb-4 text-2xl">
+                  🔑
+                </div>
+                <h2 className="text-xl font-serif font-bold text-slate-900">
+                  Password & Credential Sanctuary
+                </h2>
+                <p className="text-sm text-slate-500 max-w-sm mt-1 leading-relaxed">
+                  Store telehealth logins, client portals, and confidential access keys securely.
+                </p>
+                <button
+                  onClick={handleNewPassword}
+                  className="mt-5 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full text-xs shadow-md transition-all active:scale-95"
+                >
+                  + Add New Password
+                </button>
               </div>
-              <h2 className="text-xl font-serif font-semibold text-stone-800">
-                Password & Credential Vault
-              </h2>
-              <p className="text-sm text-stone-500 max-w-sm mt-1">
-                Store telehealth logins, client portals, and confidential credentials securely.
-              </p>
-              <button
-                onClick={handleNewPassword}
-                className="mt-5 py-2.5 px-5 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl text-xs shadow-md transition-all"
-              >
-                + Add New Password
-              </button>
-            </div>
-          )
-        )}
+            )
+          )}
+        </div>
       </div>
 
       {/* Backup & Settings Modal */}

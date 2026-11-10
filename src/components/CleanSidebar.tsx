@@ -8,7 +8,8 @@ import {
   Trash2, 
   ShieldCheck, 
   Lock,
-  Download
+  Download,
+  Sun
 } from 'lucide-react';
 import { VaultItem } from '@/types';
 
@@ -61,76 +62,54 @@ export function CleanSidebar({
   };
 
   return (
-    <aside className="w-80 bg-stone-900 border-r border-stone-800 flex flex-col h-full select-none text-stone-200">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-stone-800 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-serif font-bold text-xs">
-            Ψ
-          </div>
-          <div>
-            <h1 className="text-sm font-semibold text-stone-100 font-serif tracking-wide">
-              Practitioner Vault
-            </h1>
-            <p className="text-[10px] text-stone-400 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              <span>Encrypted & Private</span>
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={onLockVault}
-          title="Lock Vault Now (⌘L)"
-          className="p-1.5 rounded-lg text-stone-400 hover:text-amber-400 hover:bg-stone-800 transition-colors"
-        >
-          <Lock className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Section 3: Toggle for Password Section / Notes */}
-      <div className="p-3 border-b border-stone-800">
-        <div className="grid grid-cols-2 p-1 bg-stone-950 rounded-xl border border-stone-800">
+    <aside className="w-full md:w-80 bg-slate-50 border-r border-slate-200/90 flex flex-col h-full select-none text-slate-800 shrink-0">
+      {/* Section: Toggle for Password Section & Notes */}
+      <div className="p-3 sm:p-4 border-b border-slate-200/90 bg-white/80">
+        <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl border border-slate-200/70 shadow-inner">
           <button
             onClick={() => onTabChange('notes')}
-            className={`py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
               activeTab === 'notes'
-                ? 'bg-stone-800 text-stone-100 shadow-sm border border-stone-700/60'
-                : 'text-stone-400 hover:text-stone-200'
+                ? 'bg-white text-blue-900 shadow-[0_2px_6px_rgba(0,0,0,0.06)] border border-slate-200/60'
+                : 'text-slate-600 hover:text-blue-900'
             }`}
           >
-            <FileText className="w-3.5 h-3.5 text-amber-400" />
+            <Sun className="w-4 h-4 text-amber-500 fill-amber-500" />
             <span>Notes ({noteItems.length})</span>
           </button>
 
           <button
             onClick={() => onTabChange('passwords')}
-            className={`py-1.5 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-all ${
+            className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
               activeTab === 'passwords'
-                ? 'bg-stone-800 text-stone-100 shadow-sm border border-stone-700/60'
-                : 'text-stone-400 hover:text-stone-200'
+                ? 'bg-white text-blue-900 shadow-[0_2px_6px_rgba(0,0,0,0.06)] border border-slate-200/60'
+                : 'text-slate-600 hover:text-blue-900'
             }`}
           >
-            <Key className="w-3.5 h-3.5 text-rose-400" />
+            <Key className="w-4 h-4 text-blue-600" />
             <span>Passwords ({passwordItems.length})</span>
           </button>
         </div>
 
-        {/* Create Button */}
+        {/* Create Button with Logo Sun Gold Accent */}
         <button
           onClick={activeTab === 'notes' ? onNewNote : onNewPassword}
-          className="mt-2.5 w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99]"
+          className="mt-3 w-full py-2.5 px-4 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-[0_2px_8px_rgba(245,158,11,0.25)] hover:shadow-[0_4px_12px_rgba(245,158,11,0.35)]"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>{activeTab === 'notes' ? 'New Note' : 'New Password'}</span>
         </button>
       </div>
 
-      {/* Section 2: Sidebar List (Notes / Passwords) */}
-      <div className="flex-1 overflow-y-auto divide-y divide-stone-800/50 scrollbar-thin">
+      {/* Section: Sidebar Note / Password Titles List */}
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-200/60 scrollbar-thin">
         {filteredList.length === 0 ? (
-          <div className="p-8 text-center text-stone-500 text-xs">
-            {searchQuery ? 'No matching entries found.' : activeTab === 'notes' ? 'No notes yet. Click "+ New Note" to begin.' : 'No passwords stored yet. Click "+ New Password" to add one.'}
+          <div className="p-8 text-center text-slate-400 text-xs leading-relaxed">
+            {searchQuery
+              ? 'No matching entries found.'
+              : activeTab === 'notes'
+              ? 'No notes yet. Click "+ New Note" above to write in your clean white space.'
+              : 'No passwords stored yet. Click "+ New Password" to add one.'}
           </div>
         ) : (
           filteredList.map((item) => {
@@ -139,33 +118,33 @@ export function CleanSidebar({
               <div
                 key={item.id}
                 onClick={() => onSelectItem(item.id)}
-                className={`p-3.5 cursor-pointer transition-all select-none group relative border-l-2 ${
+                className={`p-3.5 sm:p-4 cursor-pointer transition-all select-none group relative border-l-4 ${
                   isSelected
-                    ? 'bg-stone-800/90 text-stone-100 border-l-amber-500 shadow-inner'
-                    : 'text-stone-300 hover:bg-stone-800/40 border-l-transparent'
+                    ? 'bg-white text-blue-950 border-l-blue-600 shadow-sm'
+                    : 'text-slate-700 hover:bg-slate-100/70 border-l-transparent'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-xs font-semibold line-clamp-1 group-hover:text-amber-300 transition-colors flex-1">
+                  <h3 className="text-xs sm:text-sm font-semibold line-clamp-1 group-hover:text-blue-700 transition-colors flex-1">
                     {item.title || (activeTab === 'notes' ? 'Untitled Note' : 'Untitled Credential')}
                   </h3>
 
-                  <span className="text-[10px] text-stone-500 shrink-0 font-mono">
+                  <span className="text-[10px] text-slate-400 shrink-0 font-mono">
                     {formatDate(item.updatedAt)}
                   </span>
                 </div>
 
                 {activeTab === 'notes' ? (
-                  <p className="mt-1 text-[11px] text-stone-400 line-clamp-2 leading-relaxed">
-                    {item.content || <em className="text-stone-600">Blank note</em>}
+                  <p className="mt-1 text-[11px] sm:text-xs text-slate-500 line-clamp-2 leading-relaxed font-sans">
+                    {item.content || <em className="text-slate-400">Blank note</em>}
                   </p>
                 ) : (
-                  <p className="mt-1 text-[11px] font-mono text-stone-400 truncate">
+                  <p className="mt-1 text-[11px] font-mono text-blue-700 truncate">
                     {item.credential?.username || 'No username set'}
                   </p>
                 )}
 
-                {/* Delete button on hover */}
+                {/* Delete button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -174,7 +153,7 @@ export function CleanSidebar({
                     }
                   }}
                   title="Delete"
-                  className="absolute right-2.5 bottom-2.5 p-1 rounded opacity-0 group-hover:opacity-100 hover:text-rose-400 text-stone-500 transition-all"
+                  className="absolute right-3 bottom-3 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:text-rose-600 hover:bg-rose-50 text-slate-400 transition-all"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -185,20 +164,20 @@ export function CleanSidebar({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-stone-800 flex items-center justify-between text-xs text-stone-400 bg-stone-950/70">
+      <div className="p-3 border-t border-slate-200/90 flex items-center justify-between text-xs text-slate-500 bg-white">
         <button
           onClick={onExportBackup}
-          className="hover:text-amber-400 transition-colors flex items-center gap-1.5 text-[11px]"
+          className="hover:text-blue-700 transition-colors flex items-center gap-1.5 text-[11px] font-medium"
         >
-          <Download className="w-3.5 h-3.5" />
+          <Download className="w-3.5 h-3.5 text-blue-600" />
           <span>Backup Vault</span>
         </button>
 
-        <span className="text-[10px] text-emerald-400 font-mono">
-          ● Locked to Device
+        <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
+          <ShieldCheck className="w-3 h-3 text-emerald-500" />
+          <span>AES-256 Encrypted</span>
         </span>
       </div>
     </aside>
   );
 }
-

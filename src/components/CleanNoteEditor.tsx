@@ -1,24 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Trash2, Clock, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trash2, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { VaultItem } from '@/types';
 
 interface CleanNoteEditorProps {
   note: VaultItem;
   onUpdateNote: (updated: VaultItem) => void;
   onDeleteNote: (id: string) => void;
+  onBack?: () => void;
 }
 
 export function CleanNoteEditor({
   note,
   onUpdateNote,
   onDeleteNote,
+  onBack,
 }: CleanNoteEditorProps) {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content);
   const [savedStatus, setSavedStatus] = useState(false);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync state if selected note changes
   useEffect(() => {
@@ -58,22 +60,38 @@ export function CleanNoteEditor({
   const chars = content.length;
 
   return (
-    <div className="flex-1 bg-stone-100 flex flex-col h-full overflow-hidden">
-      {/* Top Bar for Note Actions */}
-      <div className="h-12 px-8 border-b border-stone-200 bg-white/70 backdrop-blur flex items-center justify-between text-xs text-stone-500">
+    <div className="flex-1 bg-slate-100/60 flex flex-col h-full overflow-hidden">
+      {/* Top Action Bar */}
+      <div className="h-13 px-4 sm:px-8 border-b border-slate-200/80 bg-white flex items-center justify-between text-xs text-slate-500 shrink-0">
         <div className="flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-stone-400" />
-          <span>Last edited: {new Date(note.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          {/* Mobile Back Button */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="md:hidden flex items-center gap-1.5 py-1.5 px-2.5 -ml-1 text-blue-700 hover:text-blue-900 font-semibold text-xs rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Notes</span>
+            </button>
+          )}
+
+          <div className="hidden sm:flex items-center gap-1.5 text-slate-500">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span>
+              Edited {new Date(note.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+
           {savedStatus && (
-            <span className="flex items-center gap-1 text-emerald-600 font-medium ml-2">
+            <span className="flex items-center gap-1 text-emerald-600 font-medium ml-1 sm:ml-2">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Saved</span>
+              <span className="text-[11px]">Saved</span>
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-stone-400 font-mono">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <span className="text-slate-400 font-mono text-[11px] sm:text-xs">
             {words} {words === 1 ? 'word' : 'words'} · {chars} chars
           </span>
 
@@ -83,7 +101,7 @@ export function CleanNoteEditor({
                 onDeleteNote(note.id);
               }
             }}
-            className="p-1.5 text-stone-400 hover:text-rose-600 transition-colors rounded-lg hover:bg-stone-100"
+            className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors rounded-lg hover:bg-rose-50"
             title="Delete Note"
           >
             <Trash2 className="w-4 h-4" />
@@ -91,9 +109,9 @@ export function CleanNoteEditor({
         </div>
       </div>
 
-      {/* The White Blank Space To Write In */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center">
-        <div className="w-full max-w-3xl bg-white border border-stone-200/90 rounded-2xl shadow-sm p-8 sm:p-12 flex flex-col min-h-full">
+      {/* The White Blank Space To Write In (Google-style card container) */}
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 flex justify-center">
+        <div className="w-full max-w-3xl bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-[0_1px_6px_rgba(32,33,36,0.08)] sm:shadow-[0_2px_12px_rgba(32,33,36,0.08)] p-6 sm:p-10 md:p-12 flex flex-col min-h-full">
           {/* Note Title Input */}
           <input
             type="text"
@@ -106,7 +124,7 @@ export function CleanNoteEditor({
               }
             }}
             placeholder="Note Title..."
-            className="w-full text-3xl sm:text-4xl font-serif font-bold text-stone-900 placeholder:text-stone-300 focus:outline-none border-b border-stone-100 pb-4 mb-6 transition-all"
+            className="w-full text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none border-b border-slate-100 pb-3 sm:pb-4 mb-4 sm:mb-6 transition-all"
           />
 
           {/* Note Content Blank Writing Canvas */}
@@ -114,14 +132,13 @@ export function CleanNoteEditor({
             ref={textareaRef}
             value={content}
             onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="Start writing here... Your thoughts, reflections, client breakthroughs, or memory..."
+            placeholder="Start writing here... Your thoughts, memory, client breakthroughs, or reflections..."
             autoFocus
-            className="w-full flex-1 bg-transparent text-stone-800 placeholder:text-stone-300 text-base sm:text-lg leading-relaxed focus:outline-none resize-none font-sans"
-            style={{ minHeight: '400px' }}
+            className="w-full flex-1 bg-transparent text-slate-800 placeholder:text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed focus:outline-none resize-none font-sans"
+            style={{ minHeight: '380px' }}
           />
         </div>
       </div>
     </div>
   );
 }
-
