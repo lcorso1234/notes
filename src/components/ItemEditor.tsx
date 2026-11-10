@@ -425,3 +425,4 @@ export function ItemEditor({ item, onUpdateItem, onDeleteItem }: ItemEditorProps
     </div>
   );
 }
+

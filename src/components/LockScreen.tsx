@@ -266,3 +266,4 @@ export function LockScreen({ isInitialized, onUnlocked, onVaultImported }: LockS
     </div>
   );
 }
+

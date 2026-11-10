@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { 
   Search, 
   Lock, 
@@ -10,8 +10,12 @@ import {
   Compass, 
   Trophy, 
   Key, 
-  FileText,
-  ChevronDown
+  ChevronDown,
+  Play,
+  Pause,
+  RotateCcw,
+  Timer,
+  Lightbulb
 } from 'lucide-react';
 import { ItemType } from '@/types';
 
@@ -20,6 +24,7 @@ interface HeaderProps {
   onSearchChange: (query: string) => void;
   onLockVault: () => void;
   onOpenSettings: () => void;
+  onOpenPrompts: () => void;
   onNewItem: (type?: ItemType) => void;
   autoLockMinutes: number;
 }
@@ -29,11 +34,44 @@ export function Header({
   onSearchChange,
   onLockVault,
   onOpenSettings,
+  onOpenPrompts,
   onNewItem,
   autoLockMinutes,
 }: HeaderProps) {
-  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Clinical/Session Timer state (Default: 50 minute session)
+  const DEFAULT_SECONDS = 50 * 60;
+  const [sessionSeconds, setSessionSeconds] = useState(DEFAULT_SECONDS);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerMode, setTimerMode] = useState<'countdown' | 'stopwatch'>('countdown');
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (timerRunning) {
+      interval = setInterval(() => {
+        setSessionSeconds((prev) => {
+          if (timerMode === 'countdown') {
+            if (prev <= 1) {
+              setTimerRunning(false);
+              return 0;
+            }
+            return prev - 1;
+          } else {
+            return prev + 1;
+          }
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [timerRunning, timerMode]);
+
+  const formatTimer = (sec: number) => {
+    const mins = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   // Keyboard shortcut listener: Cmd/Ctrl+K to search, Cmd/Ctrl+L to lock
   useEffect(() => {
@@ -72,6 +110,44 @@ export function Header({
             ✕
           </button>
         )}
+      </div>
+
+      {/* Practitioner Center Tools: Session Timer & Prompts */}
+      <div className="hidden lg:flex items-center gap-2">
+        {/* Session Timer Widget */}
+        <div className="flex items-center gap-1.5 bg-stone-900 border border-stone-800/80 rounded-xl px-2.5 py-1 text-xs">
+          <Timer className="w-3.5 h-3.5 text-amber-400" />
+          <span className="font-mono text-stone-200 font-medium">
+            {formatTimer(sessionSeconds)}
+          </span>
+          <button
+            onClick={() => setTimerRunning(!timerRunning)}
+            className="p-1 text-stone-400 hover:text-stone-200 rounded hover:bg-stone-800 transition-colors"
+            title={timerRunning ? 'Pause Session Timer' : 'Start Session Timer'}
+          >
+            {timerRunning ? <Pause className="w-3 h-3 text-amber-400" /> : <Play className="w-3 h-3 text-emerald-400" />}
+          </button>
+          <button
+            onClick={() => {
+              setTimerRunning(false);
+              setSessionSeconds(DEFAULT_SECONDS);
+            }}
+            className="p-1 text-stone-500 hover:text-stone-300 rounded hover:bg-stone-800 transition-colors"
+            title="Reset Timer (50m)"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Prompts Drawer Button */}
+        <button
+          onClick={onOpenPrompts}
+          className="py-1.5 px-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-amber-300/90 text-xs font-medium flex items-center gap-1.5 transition-all"
+          title="Practitioner Reflection Prompts"
+        >
+          <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+          <span>Inquiry Prompts</span>
+        </button>
       </div>
 
       {/* Header Actions */}

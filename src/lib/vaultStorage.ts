@@ -159,3 +159,4 @@ export function resetLocalVault(): void {
     localStorage.removeItem(STORAGE_KEY);
   }
 }
+

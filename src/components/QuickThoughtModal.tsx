@@ -116,3 +116,4 @@ export function QuickThoughtModal({ isOpen, onClose, onSave }: QuickThoughtModal
     </div>
   );
 }
+
