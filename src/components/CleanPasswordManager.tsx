@@ -44,6 +44,14 @@ export function CleanPasswordManager({
   const [showPassword, setShowPassword] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [savedStatus, setSavedStatus] = useState(false);
+  const titleRef = React.useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.style.height = 'auto';
+      titleRef.current.style.height = `${titleRef.current.scrollHeight}px`;
+    }
+  }, [title]);
 
   useEffect(() => {
     setTitle(item.title);
@@ -172,12 +180,13 @@ export function CleanPasswordManager({
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
             Account / Service Name
           </label>
-          <input
-            type="text"
+          <textarea
+            ref={titleRef}
+            rows={1}
             value={title}
             onChange={(e) => handleUpdate({ title: e.target.value })}
             placeholder="e.g. Telehealth Client Portal, Work Email, EHR..."
-            className="w-full text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none border-b border-slate-100 pb-3 bg-transparent"
+            className="w-full text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none resize-none overflow-hidden bg-transparent mb-1 leading-snug break-words whitespace-pre-wrap transition-all"
           />
         </div>
 

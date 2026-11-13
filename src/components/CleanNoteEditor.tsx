@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Trash2, 
-  Clock, 
   CheckCircle2, 
   ArrowLeft,
   PanelLeftClose,
@@ -34,13 +33,23 @@ export function CleanNoteEditor({
   const [content, setContent] = useState(note.content);
   const [savedStatus, setSavedStatus] = useState(false);
   const [copiedStatus, setCopiedStatus] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync state if selected note changes
   useEffect(() => {
     setTitle(note.title);
     setContent(note.content);
   }, [note.id]);
+
+  // Auto-resize title textarea to prevent any text clipping or cutoff
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.style.height = 'auto';
+      titleRef.current.style.height = `${titleRef.current.scrollHeight}px`;
+    }
+  }, [title]);
 
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
@@ -77,13 +86,26 @@ export function CleanNoteEditor({
     setTimeout(() => setCopiedStatus(false), 2000);
   };
 
+  // Format date like Apple Notes (e.g. October 22, 2026 at 10:20 AM)
+  const formatNoteDate = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    })} at ${d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    })}`;
+  };
+
   // Word & character stats
   const words = content.trim() ? content.trim().split(/\s+/).length : 0;
   const chars = content.length;
 
   return (
     <div className="flex-1 bg-white flex flex-col h-full overflow-hidden">
-      {/* Top Action Bar */}
+      {/* Apple Notes-Style Minimal Action Bar */}
       <div className="h-12 px-4 sm:px-8 border-b border-slate-100 bg-white flex items-center justify-between text-xs text-slate-500 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Toggle Sidebar (Full Screen Mode) */}
@@ -112,22 +134,15 @@ export function CleanNoteEditor({
             </button>
           )}
 
-          <div className="hidden sm:flex items-center gap-1.5 text-slate-400 text-xs">
-            <Clock className="w-3.5 h-3.5" />
-            <span>
-              Edited {new Date(note.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </div>
-
           {savedStatus && (
-            <span className="flex items-center gap-1 text-emerald-600 font-medium ml-1">
+            <span className="flex items-center gap-1 text-emerald-600 font-medium">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span className="text-[11px]">Saved</span>
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span className="text-slate-400 font-mono text-[11px] hidden sm:inline">
             {words} {words === 1 ? 'word' : 'words'} · {chars} chars
           </span>
@@ -158,29 +173,35 @@ export function CleanNoteEditor({
         </div>
       </div>
 
-      {/* Full-Screen Pure White Writing Space */}
-      <div className="flex-1 overflow-y-auto bg-white flex flex-col px-6 sm:px-12 md:px-16 lg:px-20 py-8 sm:py-10">
-        {/* Full-Screen Note Title Input */}
-        <input
-          type="text"
+      {/* Full-Screen Pure White Writing Space (Apple Notes Flow) */}
+      <div className="flex-1 overflow-y-auto bg-white flex flex-col px-6 sm:px-12 md:px-16 lg:px-20 py-6 sm:py-8">
+        {/* Apple Notes Centered/Aligned Timestamp */}
+        <div className="text-xs text-slate-400 font-medium mb-3 select-none">
+          {formatNoteDate(note.updatedAt)}
+        </div>
+
+        {/* Auto-Wrapping Full-Width Title (Never cut off horizontally) */}
+        <textarea
+          ref={titleRef}
+          rows={1}
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              textareaRef.current?.focus();
+              contentRef.current?.focus();
             }
           }}
-          placeholder="Note Title..."
-          className="w-full text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none border-b border-slate-100 pb-4 mb-6 transition-all bg-transparent"
+          placeholder="Title"
+          className="w-full text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none resize-none overflow-hidden bg-transparent mb-3 leading-snug break-words whitespace-pre-wrap transition-all"
         />
 
-        {/* Full-Screen Note Content Blank Writing Canvas */}
+        {/* Full-Screen Note Content Canvas */}
         <textarea
-          ref={textareaRef}
+          ref={contentRef}
           value={content}
           onChange={(e) => handleContentChange(e.target.value)}
-          placeholder="Start writing here... Your thoughts, memory, client breakthroughs, or reflections..."
+          placeholder="Start writing..."
           autoFocus
           className="w-full flex-1 bg-transparent text-slate-800 placeholder:text-slate-300 text-base sm:text-lg leading-relaxed focus:outline-none resize-none font-sans min-h-[500px]"
         />
