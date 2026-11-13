@@ -3,13 +3,10 @@
 import React from 'react';
 import { 
   Plus, 
-  FileText, 
-  Key, 
   Trash2, 
-  ShieldCheck, 
-  Lock,
   Download,
-  Sun
+  Sun,
+  Key
 } from 'lucide-react';
 import { VaultItem } from '@/types';
 
@@ -22,7 +19,6 @@ interface CleanSidebarProps {
   onNewNote: () => void;
   onNewPassword: () => void;
   onDeleteItem: (id: string) => void;
-  onLockVault: () => void;
   onExportBackup: () => void;
   searchQuery: string;
 }
@@ -36,7 +32,6 @@ export function CleanSidebar({
   onNewNote,
   onNewPassword,
   onDeleteItem,
-  onLockVault,
   onExportBackup,
   searchQuery,
 }: CleanSidebarProps) {
@@ -170,12 +165,11 @@ export function CleanSidebar({
           className="hover:text-blue-700 transition-colors flex items-center gap-1.5 text-[11px] font-medium"
         >
           <Download className="w-3.5 h-3.5 text-blue-600" />
-          <span>Backup Vault</span>
+          <span>Backup & Export</span>
         </button>
 
-        <span className="text-[10px] text-emerald-600 font-medium flex items-center gap-1">
-          <ShieldCheck className="w-3 h-3 text-emerald-500" />
-          <span>AES-256 Encrypted</span>
+        <span className="text-[10px] text-slate-400 font-medium">
+          Tamillow Therapy
         </span>
       </div>
     </aside>

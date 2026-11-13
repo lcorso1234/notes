@@ -1,32 +1,45 @@
-import { VaultItem, VaultSettings, StoredVaultState } from '@/types';
-import {
-  encryptData,
-  decryptData,
-  createPasswordVerifier,
-  verifyPassword,
-  EncryptedPayload,
-} from './crypto';
+import { VaultItem, VaultSettings } from '@/types';
 import { STARTER_ITEMS } from './starterData';
 
-const STORAGE_KEY = 'practitioner_vault_store_v1';
-const SETTINGS_KEY = 'practitioner_vault_settings_v1';
+const DIRECT_STORAGE_KEY = 'tamillow_notes_store_v1';
+const SETTINGS_KEY = 'tamillow_notes_settings_v1';
 
 export const DEFAULT_SETTINGS: VaultSettings = {
-  autoLockMinutes: 15,
-  blurOnInactivity: true,
-  theme: 'dark',
+  autoLockMinutes: 0,
+  blurOnInactivity: false,
+  theme: 'light',
 };
 
-export function getStoredVaultState(): StoredVaultState {
+/**
+ * Directly retrieve notes without requiring a passcode.
+ */
+export function getStoredNotes(): VaultItem[] {
   if (typeof window === 'undefined') {
-    return { hasInitialized: false };
+    return STARTER_ITEMS;
   }
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { hasInitialized: false };
-    return JSON.parse(raw);
+    const raw = localStorage.getItem(DIRECT_STORAGE_KEY);
+    if (!raw) {
+      // First time loading: initialize with starter items
+      localStorage.setItem(DIRECT_STORAGE_KEY, JSON.stringify(STARTER_ITEMS));
+      return STARTER_ITEMS;
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : STARTER_ITEMS;
   } catch {
-    return { hasInitialized: false };
+    return STARTER_ITEMS;
+  }
+}
+
+/**
+ * Directly save notes to local storage.
+ */
+export function saveStoredNotes(items: VaultItem[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(DIRECT_STORAGE_KEY, JSON.stringify(items));
+  } catch (err) {
+    console.error('Failed to save notes:', err);
   }
 }
 
@@ -46,78 +59,14 @@ export function saveSettings(settings: VaultSettings): void {
 }
 
 /**
- * Initializes a new vault with a master passphrase.
+ * Exports notes and passwords backup as a downloadable JSON file.
  */
-export async function initializeVault(passphrase: string): Promise<VaultItem[]> {
-  const verifier = await createPasswordVerifier(passphrase);
-  const items = [...STARTER_ITEMS];
-  const encrypted = await encryptData(items, passphrase);
-
-  const state: StoredVaultState = {
-    hasInitialized: true,
-    verifier,
-    encryptedData: encrypted,
-  };
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  return items;
-}
-
-/**
- * Unlocks the vault using the master passphrase.
- */
-export async function unlockVault(passphrase: string): Promise<VaultItem[]> {
-  const state = getStoredVaultState();
-  if (!state.hasInitialized || !state.verifier || !state.encryptedData) {
-    throw new Error('Vault has not been set up yet.');
-  }
-
-  const isValid = await verifyPassword(
-    passphrase,
-    state.verifier.salt,
-    state.verifier.hash
-  );
-
-  if (!isValid) {
-    throw new Error('Incorrect master passphrase. Access denied.');
-  }
-
-  const items = await decryptData<VaultItem[]>(state.encryptedData, passphrase);
-  return items;
-}
-
-/**
- * Saves updated items to encrypted storage.
- */
-export async function saveVaultItems(items: VaultItem[], passphrase: string): Promise<void> {
-  const state = getStoredVaultState();
-  if (!state.hasInitialized || !state.verifier) {
-    throw new Error('Vault state missing.');
-  }
-
-  const encrypted = await encryptData(items, passphrase);
-  const updatedState: StoredVaultState = {
-    ...state,
-    encryptedData: encrypted,
-  };
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedState));
-}
-
-/**
- * Exports the raw encrypted backup object as a downloadable JSON file.
- */
-export function exportEncryptedBackup(): void {
-  const state = getStoredVaultState();
-  if (!state.hasInitialized) {
-    throw new Error('No vault to export.');
-  }
-
+export function exportNotesBackup(items: VaultItem[]): void {
   const payload = {
-    type: 'PRACTITIONER_SOVEREIGN_VAULT_BACKUP',
+    type: 'TAMILLOW_THERAPY_NOTES_BACKUP',
     version: 1,
     exportedAt: new Date().toISOString(),
-    data: state,
+    items,
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -126,25 +75,29 @@ export function exportEncryptedBackup(): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `practitioner-vault-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `tamillow-notes-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
 /**
- * Imports a vault backup JSON file.
+ * Imports notes from a backup JSON file.
  */
-export async function importEncryptedBackup(jsonString: string): Promise<void> {
+export function importNotesBackup(jsonString: string): VaultItem[] {
   try {
     const parsed = JSON.parse(jsonString);
-    if (parsed.type !== 'PRACTITIONER_SOVEREIGN_VAULT_BACKUP' || !parsed.data) {
+    let itemsToImport: VaultItem[] = [];
+
+    if (Array.isArray(parsed)) {
+      itemsToImport = parsed;
+    } else if (parsed && Array.isArray(parsed.items)) {
+      itemsToImport = parsed.items;
+    } else {
       throw new Error('Unrecognized backup file format.');
     }
-    const state = parsed.data as StoredVaultState;
-    if (!state.hasInitialized || !state.verifier || !state.encryptedData) {
-      throw new Error('Invalid backup structure.');
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+    saveStoredNotes(itemsToImport);
+    return itemsToImport;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to import backup.';
     throw new Error(message);
@@ -152,11 +105,10 @@ export async function importEncryptedBackup(jsonString: string): Promise<void> {
 }
 
 /**
- * Resets the entire vault (clears local storage).
+ * Clears stored notes from browser.
  */
-export function resetLocalVault(): void {
+export function resetStoredNotes(): void {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DIRECT_STORAGE_KEY);
   }
 }
-

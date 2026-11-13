@@ -1,107 +1,50 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { VaultItem, VaultSettings } from '@/types';
+import { VaultItem } from '@/types';
 import { 
-  getStoredVaultState, 
-  getStoredSettings, 
-  saveSettings, 
-  saveVaultItems 
+  getStoredNotes, 
+  saveStoredNotes 
 } from '@/lib/vaultStorage';
-import { LockScreen } from '@/components/LockScreen';
 import { CleanHeader } from '@/components/CleanHeader';
 import { CleanSidebar } from '@/components/CleanSidebar';
 import { CleanNoteEditor } from '@/components/CleanNoteEditor';
 import { CleanPasswordManager } from '@/components/CleanPasswordManager';
 import { ExportImportModal } from '@/components/ExportImportModal';
 
-export default function CleanPractitionerApp() {
+export default function TamillowNotesApp() {
   const [mounted, setMounted] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [masterPassphrase, setMasterPassphrase] = useState<string>('');
-  
   const [items, setItems] = useState<VaultItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'notes' | 'passwords'>('notes');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mobile responsiveness state: 'list' (sidebar) or 'editor' (main canvas)
-  const [mobileView, setMobileView] = useState<'list' | 'editor'>('list');
+  // Mobile responsiveness view: 'list' (sidebar) or 'editor' (white canvas)
+  const [mobileView, setMobileView] = useState<'list' | 'editor'>('editor');
 
-  const [settings, setSettings] = useState<VaultSettings>(getStoredSettings());
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
-  // Initialize client state
+  // Directly load notes on client mount — straight into notes!
   useEffect(() => {
     setMounted(true);
-    const state = getStoredVaultState();
-    setIsInitialized(state.hasInitialized);
-    setSettings(getStoredSettings());
-  }, []);
+    const loaded = getStoredNotes();
+    setItems(loaded);
 
-  // Lock Vault
-  const handleLockVault = useCallback(() => {
-    setIsUnlocked(false);
-    setMasterPassphrase('');
-    setSelectedItemId(null);
-    setMobileView('list');
-  }, []);
-
-  // Inactivity Auto-Lock
-  useEffect(() => {
-    if (!isUnlocked || settings.autoLockMinutes <= 0) return;
-
-    let timeoutId: NodeJS.Timeout;
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        handleLockVault();
-      }, settings.autoLockMinutes * 60 * 1000);
-    };
-
-    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-    events.forEach((evt) => window.addEventListener(evt, resetTimer, { passive: true }));
-    resetTimer();
-
-    return () => {
-      clearTimeout(timeoutId);
-      events.forEach((evt) => window.removeEventListener(evt, resetTimer));
-    };
-  }, [isUnlocked, settings.autoLockMinutes, handleLockVault]);
-
-  // Handle successful unlock
-  const handleUnlocked = (loadedItems: VaultItem[], passphrase: string) => {
-    setItems(loadedItems);
-    setMasterPassphrase(passphrase);
-    setIsUnlocked(true);
-    setIsInitialized(true);
-
-    const firstNote = loadedItems.find((it) => it.type !== 'password' && it.pillar !== 'credentials');
+    // Default select first note
+    const firstNote = loaded.find((it) => it.type !== 'password' && it.pillar !== 'credentials');
     if (firstNote) {
       setSelectedItemId(firstNote.id);
-      setActiveTab('notes');
-    } else if (loadedItems.length > 0) {
-      setSelectedItemId(loadedItems[0].id);
+    } else if (loaded.length > 0) {
+      setSelectedItemId(loaded[0].id);
     }
-    // On desktop start with editor open, on mobile start with list
-    setMobileView('list');
-  };
+  }, []);
 
-  // Encrypt and persist changes
-  const persistItems = useCallback(
-    async (updatedItems: VaultItem[]) => {
-      if (!masterPassphrase) return;
-      try {
-        await saveVaultItems(updatedItems, masterPassphrase);
-      } catch (err) {
-        console.error('Failed to save encrypted items:', err);
-      }
-    },
-    [masterPassphrase]
-  );
+  // Save changes directly to localStorage
+  const persistItems = useCallback((updatedItems: VaultItem[]) => {
+    saveStoredNotes(updatedItems);
+  }, []);
 
-  // Create New Note (Clean White Space to write in)
+  // Create New Note (Immediately opens clean white space to write in)
   const handleNewNote = () => {
     const newNote: VaultItem = {
       id: `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -185,7 +128,7 @@ export default function CleanPractitionerApp() {
     setSelectedItemId(candidate ? candidate.id : null);
   };
 
-  // Select item handler (handles mobile view transition)
+  // Select item handler
   const handleSelectItem = (id: string) => {
     setSelectedItemId(id);
     setMobileView('editor');
@@ -199,22 +142,8 @@ export default function CleanPractitionerApp() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center text-slate-500 font-serif text-sm">
-        Preparing Practitioner Sanctuary...
+        Opening Tamillow Therapy Notes...
       </div>
-    );
-  }
-
-  // Master Lock Screen
-  if (!isUnlocked) {
-    return (
-      <LockScreen
-        isInitialized={isInitialized}
-        onUnlocked={handleUnlocked}
-        onVaultImported={() => {
-          const state = getStoredVaultState();
-          setIsInitialized(state.hasInitialized);
-        }}
-      />
     );
   }
 
@@ -224,7 +153,6 @@ export default function CleanPractitionerApp() {
       <CleanHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onLockVault={handleLockVault}
         onOpenSettings={() => setSettingsModalOpen(true)}
         onToggleMobileSidebar={() => setMobileView(mobileView === 'list' ? 'editor' : 'list')}
         isMobileListOpen={mobileView === 'list'}
@@ -247,7 +175,6 @@ export default function CleanPractitionerApp() {
             onNewNote={handleNewNote}
             onNewPassword={handleNewPassword}
             onDeleteItem={handleDeleteItem}
-            onLockVault={handleLockVault}
             onExportBackup={() => setSettingsModalOpen(true)}
             searchQuery={searchQuery}
           />
@@ -277,7 +204,7 @@ export default function CleanPractitionerApp() {
                   A Clean White Canvas
                 </h2>
                 <p className="text-sm text-slate-500 max-w-sm mt-1 leading-relaxed">
-                  Click below to begin writing. All reflections and memory are encrypted locally on this device.
+                  Click below to begin writing.
                 </p>
                 <button
                   onClick={handleNewNote}
@@ -302,10 +229,10 @@ export default function CleanPractitionerApp() {
                   🔑
                 </div>
                 <h2 className="text-xl font-serif font-bold text-slate-900">
-                  Password & Credential Sanctuary
+                  Password & Credential Section
                 </h2>
                 <p className="text-sm text-slate-500 max-w-sm mt-1 leading-relaxed">
-                  Store telehealth logins, client portals, and confidential access keys securely.
+                  Store telehealth logins, client portals, and access keys.
                 </p>
                 <button
                   onClick={handleNewPassword}
@@ -319,21 +246,17 @@ export default function CleanPractitionerApp() {
         </div>
       </div>
 
-      {/* Backup & Settings Modal */}
+      {/* Backup & Export Modal */}
       <ExportImportModal
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
         items={items}
-        settings={settings}
-        onUpdateSettings={(s) => {
-          setSettings(s);
-          saveSettings(s);
+        onImportSuccess={(newItems) => {
+          setItems(newItems);
+          if (newItems.length > 0) {
+            setSelectedItemId(newItems[0].id);
+          }
         }}
-        onVaultReload={() => {
-          const state = getStoredVaultState();
-          setIsInitialized(state.hasInitialized);
-        }}
-        onLockVault={handleLockVault}
       />
     </div>
   );
