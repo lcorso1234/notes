@@ -10,9 +10,10 @@ import {
   Wand2, 
   ExternalLink, 
   Trash2, 
-  Lock,
   CheckCircle2,
-  ArrowLeft
+  ArrowLeft,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { VaultItem } from '@/types';
 import { generateStrongPassword } from '@/lib/crypto';
@@ -22,6 +23,8 @@ interface CleanPasswordManagerProps {
   onUpdateItem: (updated: VaultItem) => void;
   onDeleteItem: (id: string) => void;
   onBack?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export function CleanPasswordManager({
@@ -29,6 +32,8 @@ export function CleanPasswordManager({
   onUpdateItem,
   onDeleteItem,
   onBack,
+  isSidebarCollapsed,
+  onToggleSidebar,
 }: CleanPasswordManagerProps) {
   const [title, setTitle] = useState(item.title);
   const [username, setUsername] = useState(item.credential?.username || '');
@@ -100,14 +105,28 @@ export function CleanPasswordManager({
   };
 
   return (
-    <div className="flex-1 bg-slate-100/60 flex flex-col h-full overflow-hidden">
-      {/* Top Bar */}
-      <div className="h-13 px-4 sm:px-8 border-b border-slate-200/80 bg-white flex items-center justify-between text-xs text-slate-500 shrink-0">
-        <div className="flex items-center gap-2">
+    <div className="flex-1 bg-white flex flex-col h-full overflow-hidden">
+      {/* Top Action Bar */}
+      <div className="h-12 px-4 sm:px-8 border-b border-slate-100 bg-white flex items-center justify-between text-xs text-slate-500 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar (Full Screen)'}
+            >
+              {isSidebarCollapsed ? (
+                <PanelLeftOpen className="w-4 h-4 text-blue-600" />
+              ) : (
+                <PanelLeftClose className="w-4 h-4" />
+              )}
+            </button>
+          )}
+
           {onBack && (
             <button
               onClick={onBack}
-              className="md:hidden flex items-center gap-1.5 py-1.5 px-2.5 -ml-1 text-blue-700 hover:text-blue-900 font-semibold text-xs rounded-lg hover:bg-blue-50 transition-colors"
+              className="md:hidden flex items-center gap-1.5 py-1 px-2.5 -ml-1 text-blue-700 hover:text-blue-900 font-semibold text-xs rounded-lg hover:bg-blue-50 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Passwords</span>
@@ -115,12 +134,12 @@ export function CleanPasswordManager({
           )}
 
           <div className="flex items-center gap-1.5 text-blue-900 font-medium">
-            <Lock className="w-3.5 h-3.5 text-blue-600" />
-            <span>Encrypted Credential</span>
+            <Key className="w-3.5 h-3.5 text-blue-600" />
+            <span>Credential</span>
           </div>
 
           {savedStatus && (
-            <span className="flex items-center gap-1 text-emerald-600 font-medium ml-1 sm:ml-2">
+            <span className="flex items-center gap-1 text-emerald-600 font-medium ml-1">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span className="text-[11px]">Saved</span>
             </span>
@@ -128,7 +147,7 @@ export function CleanPasswordManager({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-slate-400 text-[11px] sm:text-xs hidden sm:inline">
+          <span className="text-slate-400 text-xs hidden sm:inline">
             Updated {new Date(item.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
 
@@ -146,23 +165,23 @@ export function CleanPasswordManager({
         </div>
       </div>
 
-      {/* Password Content (Google-style pure white card container) */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 flex justify-center">
-        <div className="w-full max-w-2xl bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl shadow-[0_1px_6px_rgba(32,33,36,0.08)] sm:shadow-[0_2px_12px_rgba(32,33,36,0.08)] p-6 sm:p-10 space-y-6">
-          {/* Service Title */}
-          <div>
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-              Account / Service Name
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => handleUpdate({ title: e.target.value })}
-              placeholder="e.g. Telehealth Client Portal, Work Email, EHR..."
-              className="w-full text-xl sm:text-2xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none border-b border-slate-200 pb-2"
-            />
-          </div>
+      {/* Full-Screen Pure White Password Space */}
+      <div className="flex-1 overflow-y-auto bg-white flex flex-col px-6 sm:px-12 md:px-16 lg:px-20 py-8 sm:py-10 max-w-4xl">
+        {/* Service Title */}
+        <div className="mb-6">
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+            Account / Service Name
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => handleUpdate({ title: e.target.value })}
+            placeholder="e.g. Telehealth Client Portal, Work Email, EHR..."
+            className="w-full text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-slate-900 placeholder:text-slate-300 focus:outline-none border-b border-slate-100 pb-3 bg-transparent"
+          />
+        </div>
 
+        <div className="space-y-6">
           {/* Username / Email */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">
@@ -200,7 +219,7 @@ export function CleanPasswordManager({
               <button
                 type="button"
                 onClick={handleGenerate}
-                className="text-xs text-amber-700 hover:text-amber-800 font-semibold flex items-center gap-1.5 py-1 px-2 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
+                className="text-xs text-amber-700 hover:text-amber-800 font-semibold flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
               >
                 <Wand2 className="w-3.5 h-3.5 text-amber-600" />
                 <span>Generate Strong Password</span>
@@ -238,7 +257,6 @@ export function CleanPasswordManager({
               </div>
             </div>
 
-            {/* Password strength indicator */}
             {password && (
               <div className="flex items-center gap-2 pt-1">
                 <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden flex">
@@ -290,7 +308,7 @@ export function CleanPasswordManager({
             </div>
           </div>
 
-          {/* Confidential Notes / Recovery Details */}
+          {/* Confidential Notes */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">
               Security Notes (2FA recovery codes, PIN, security questions)
@@ -299,7 +317,7 @@ export function CleanPasswordManager({
               value={notes}
               onChange={(e) => handleUpdate({ notes: e.target.value })}
               placeholder="Store additional private details, backup codes, or PINs..."
-              rows={4}
+              rows={5}
               className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 leading-relaxed resize-none font-sans"
             />
           </div>

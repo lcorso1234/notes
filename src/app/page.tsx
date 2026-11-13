@@ -22,6 +22,9 @@ export default function TamillowNotesApp() {
   // Mobile responsiveness view: 'list' (sidebar) or 'editor' (white canvas)
   const [mobileView, setMobileView] = useState<'list' | 'editor'>('editor');
 
+  // Full-screen sidebar collapse state for desktop
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   // Directly load notes on client mount — straight into notes!
@@ -148,7 +151,7 @@ export default function TamillowNotesApp() {
   }
 
   return (
-    <div className="min-h-screen h-screen flex flex-col bg-slate-50 overflow-hidden font-sans">
+    <div className="min-h-screen h-screen flex flex-col bg-white overflow-hidden font-sans">
       {/* 1. Top Header with Google Search Bar Style */}
       <CleanHeader
         searchQuery={searchQuery}
@@ -158,12 +161,16 @@ export default function TamillowNotesApp() {
         isMobileListOpen={mobileView === 'list'}
       />
 
-      {/* Main Responsive Workspace: Sidebar + White Blank Space / Password Manager */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* 2 & 3. Sidebar (visible on desktop, or on mobile when mobileView === 'list') */}
+      {/* Main Full-Screen Workspace */}
+      <div className="flex-1 flex overflow-hidden relative bg-white">
+        {/* 2 & 3. Sidebar (visible when not collapsed, or on mobile when mobileView === 'list') */}
         <div
           className={`h-full ${
-            mobileView === 'list' ? 'flex w-full md:w-80' : 'hidden md:flex md:w-80'
+            sidebarCollapsed
+              ? 'hidden'
+              : mobileView === 'list'
+              ? 'flex w-full md:w-80'
+              : 'hidden md:flex md:w-80'
           }`}
         >
           <CleanSidebar
@@ -180,10 +187,10 @@ export default function TamillowNotesApp() {
           />
         </div>
 
-        {/* 4. White Blank Space To Write In OR Password Section (visible on desktop, or mobile when mobileView === 'editor') */}
+        {/* 4. Full-Screen White Writing Space OR Password Section */}
         <div
-          className={`flex-1 h-full overflow-hidden ${
-            mobileView === 'editor' ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'
+          className={`flex-1 h-full overflow-hidden bg-white ${
+            mobileView === 'editor' ? 'flex flex-col w-full' : sidebarCollapsed ? 'flex flex-col w-full' : 'hidden md:flex md:flex-col'
           }`}
         >
           {activeTab === 'notes' ? (
@@ -194,21 +201,23 @@ export default function TamillowNotesApp() {
                 onUpdateNote={handleUpdateItem}
                 onDeleteNote={handleDeleteItem}
                 onBack={() => setMobileView('list')}
+                isSidebarCollapsed={sidebarCollapsed}
+                onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
               />
             ) : (
-              <div className="flex-1 bg-slate-100/60 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-amber-500 mb-4 text-2xl font-serif">
+              <div className="flex-1 bg-white flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center text-amber-500 mb-4 text-2xl font-serif">
                   ✎
                 </div>
                 <h2 className="text-xl font-serif font-bold text-slate-900">
                   A Clean White Canvas
                 </h2>
                 <p className="text-sm text-slate-500 max-w-sm mt-1 leading-relaxed">
-                  Click below to begin writing.
+                  Click below to begin writing in full screen.
                 </p>
                 <button
                   onClick={handleNewNote}
-                  className="mt-5 py-2.5 px-5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-full text-xs shadow-md transition-all active:scale-95"
+                  className="mt-5 py-2.5 px-6 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-full text-xs shadow-md transition-all active:scale-95"
                 >
                   + Create New Note
                 </button>
@@ -222,10 +231,12 @@ export default function TamillowNotesApp() {
                 onUpdateItem={handleUpdateItem}
                 onDeleteItem={handleDeleteItem}
                 onBack={() => setMobileView('list')}
+                isSidebarCollapsed={sidebarCollapsed}
+                onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
               />
             ) : (
-              <div className="flex-1 bg-slate-100/60 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-16 h-16 rounded-3xl bg-white border border-slate-200 shadow-sm flex items-center justify-center text-blue-600 mb-4 text-2xl">
+              <div className="flex-1 bg-white flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center text-blue-600 mb-4 text-2xl">
                   🔑
                 </div>
                 <h2 className="text-xl font-serif font-bold text-slate-900">
@@ -236,7 +247,7 @@ export default function TamillowNotesApp() {
                 </p>
                 <button
                   onClick={handleNewPassword}
-                  className="mt-5 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full text-xs shadow-md transition-all active:scale-95"
+                  className="mt-5 py-2.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full text-xs shadow-md transition-all active:scale-95"
                 >
                   + Add New Password
                 </button>
